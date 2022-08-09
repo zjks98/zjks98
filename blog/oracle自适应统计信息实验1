@@ -1,0 +1,10 @@
+### 2022/8/9 oracle自适应统计信息实验记录1 ###
+
+查看最新执行的语句的执行计划：select * from table(DBMS_XPLAN.DISPLAY_CURSOR(format=>'allstats last'));
+
+为查询语句增加动态抽样的hint：select /*+ dynamic_sampling(5) */ count(*) from items where item_type_code like '%A1%';
+
+为数据库、容器或单个会话设置动态采样级别：alter session set optimizer_dynamic_sampling = 5;
+
+
+
