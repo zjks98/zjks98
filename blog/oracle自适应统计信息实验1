@@ -1,10 +1,25 @@
 ## 2022/8/9 oracle自适应统计信息实验记录1
 
-查看最新执行的语句的执行计划：select * from table(DBMS_XPLAN.DISPLAY_CURSOR(format=>'allstats last'));
+查看参数：show parameter adaptive dynamic statistics;
 
-为查询语句增加动态抽样的hint：select /*+ dynamic_sampling(5) */ count(*) from items where item_type_code like '%A1%';
+
+
+——————————————————————————————————————————————————————————————————————————————————————
+
+
+
+查看最新执行的语句的执行计划：select * from table(DBMS_XPLAN.DISPLAY_CURSOR(format=>'allstats last'));
+                                  select /*+ gather_plan_statistics */ count(*) from title t WHERE t.title LIKE '%ad%';(显示估计行数和真实行数）
+                            select * from table(dbms_xplan.display); （之前执行语句要加上 Explain plan for）
+
+为查询语句增加动态抽样的hint：select /*+ dynamic_sampling(5) */ count(*) from title t WHERE t.title LIKE '%ad%';
 
 为数据库、容器或单个会话设置动态采样级别：alter session set optimizer_dynamic_sampling = 5;
 
+SQL计划指令存在两个表格里：DBA_SQL_PLAN_DIREECTIVES和DBA_SQL_PLAN_DIR_OBJECTS;
+
+查看示例用户OE下所有SQL计划指令：
+SELECT TO_CHAR(d.directive_id) dir_id, o.owner, o.object_name, o.subobject_namecol_name, o.object_type, d.type, d.state, d.reason FROM dba_sql_plan_directives d, dba_sql_plan_dir_objects o
+WHERE d.directive_id = o.directive_id AND o.owner IN ('OE', 'HR') ORDER BY 1.2.3.4.5;
 
 
