@@ -8,10 +8,12 @@
 
 
 
-查看最新执行的语句的执行计划：select * from table(DBMS_XPLAN.DISPLAY_CURSOR(format=>'allstats last'));
+查看最新执行的语句的执行计划：（1）select * from table(DBMS_XPLAN.DISPLAY_CURSOR(format=>'allstats last'));
                                   select /*+ gather_plan_statistics */ count(*) from title t WHERE t.title LIKE '%ad%';(显示估计行数和真实行数）
-                            select * from table(dbms_xplan.display); （之前执行语句要加上 Explain plan for）
-
+                           （2）select * from table(dbms_xplan.display); （之前执行语句要加上 Explain plan for）
+                           （3）如果不想改变查询文本添加提示，可以设置一个参数： alter session set statistics_level='ALL';
+                            然后再运行SQL语句，在运行：SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR(FORMAT=>'ALLSTATS LAST ALL +OUTLINE'));
+                            
 为查询语句增加动态抽样的hint：select /*+ dynamic_sampling(5) */ count(*) from title t WHERE t.title LIKE '%ad%';
 
 为数据库、容器或单个会话设置动态采样级别：alter session set optimizer_dynamic_sampling = 5;
@@ -23,5 +25,19 @@ SELECT TO_CHAR(d.directive_id) dir_id, o.owner, o.object_name, o.subobject_namec
 WHERE d.directive_id = o.directive_id AND o.owner IN ('OE', 'HR') ORDER BY 1.2.3.4.5;
 
 从游标缓存里获取计划信息：SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR(SQL_ID=>'the_SQL_ID', CHILD_NUMBER=>the_child_number, FORMAT=>'ALL +OUTLINE'));
+
+有DBA的权限，可以在V$SQL中搜索语句：select /* MY_TEST_QUERY */
+       e.ename,r.rname
+from   employees  e
+join   roles       r on (r.id = e.role_id)
+join   departments d on (d.id = e.dept_id)
+where  e.staffno <= 10
+and    d.dname in ('Department Name 1','Department Name 2');
+
+select sql_id, child_number, sql_text
+from   v$sql 
+where  sql_text like '%MY_TEST_QUERY%'
+and    sql_text not like '%v$sql%';
+
 
 
