@@ -2,7 +2,7 @@
 
 查看参数：show parameter adaptive dynamic statistics;
 
-
+从统计信息DBMS_stats里获取一些直方图信息时，表名需要大写。
 
 ——————————————————————————————————————————————————————————————————————————————————————
 
@@ -21,5 +21,7 @@ SQL计划指令存在两个表格里：DBA_SQL_PLAN_DIREECTIVES和DBA_SQL_PLAN_D
 查看示例用户OE下所有SQL计划指令：
 SELECT TO_CHAR(d.directive_id) dir_id, o.owner, o.object_name, o.subobject_namecol_name, o.object_type, d.type, d.state, d.reason FROM dba_sql_plan_directives d, dba_sql_plan_dir_objects o
 WHERE d.directive_id = o.directive_id AND o.owner IN ('OE', 'HR') ORDER BY 1.2.3.4.5;
+
+从游标缓存里获取计划信息：SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR(SQL_ID=>'the_SQL_ID', CHILD_NUMBER=>the_child_number, FORMAT=>'ALL +OUTLINE'));
 
 
