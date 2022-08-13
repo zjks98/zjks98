@@ -1,4 +1,4 @@
-### oracle自适应统计信息实验记录2 2022/8/13
+## oracle自适应统计信息实验记录2 2022/8/13
 
 显示完整统计信息
 Alter session set statistics_level=all;
@@ -23,3 +23,46 @@ SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR(FORMAT=>'ALLSTATS LAST ALL +OUTLIN
 Alter session set optimizer_dynamic_sampling=4;
 显示动态抽样等级：
 show parameter optimizer_dynamic_sampling
+
+
+查看SQL计划指令：(注意要大写）
+select TO_CHAR(d.directive_id) dir_id, o.owner, o.object_name, o.subobject_name, o.object_type, d.type, d.state, d.reason
+from dba_sql_plan_directives d, dba_sql_plan_dir_objects o
+where d.directive_id = o.directive_id
+and o.owner in ('SYSTEM')
+and object_name in ('MOVIE_COMPANIES')
+order by 1,2,3,4,5;
+
+SELECT SQL_ID, CHILD_NUMBER, SQL_TEXT, IS_REOPTIMIZABLE
+FROM   V$SQL
+WHERE  SQL_TEXT LIKE 'SELECT /*+gather_plan_statistics*/%';
+
+--------------------------------------------------------------------------------------------------------------------------
+
+实验部分：
+因为在SQL_plan_dir表里有movie_companies的动态采样的列note
+select count(*) from movie_companies mc where mc.note like'%(as Metro-Goldwyn-Mayer Pictures)%';
+
+运行执行计划统计信息查看指令发现，行数一致，note显示采用了统计反馈：
+Note
+-----
+   - statistics feedback used for this statement
+
+再次查看SQL计划指令表
+
+再运行另一条语句：select count(*) from person_info where note like'%ab%';
+统计反馈已经被应用
+
+SQL语句：select count(*) from company_name cn where cn.country_code like '%u%'; 过了一会再运行，统计反馈已经被应用！
+select count(*) from company_name cn where cn.name like '%abc%'; (E-rows和A-rows相差很大：11750:8）
+运行动态采样的hint：select /*+ dynamic_sampling(3) */ count(*) from company_name cn where cn.name like '%abc%';
+动态采样等级为2时，E-rows和A-rows没有改变：11750：8；
+动态采样等级为1时，E-rows和A-rows没有改变：11750：8；
+动态采样等级为3时，E-rows和A-rows改变：50:8；
+动态采样等级为4时，E-rows和A-rows改变：50:8；
+动态采样等级为5时，E-rows和A-rows改变：28:8；
+
+
+
+
+
