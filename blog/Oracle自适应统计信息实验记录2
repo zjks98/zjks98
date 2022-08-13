@@ -1,0 +1,22 @@
+### oracle自适应统计信息实验记录2 2022/8/13
+
+显示完整统计信息
+Alter session set statistics_level=all;
+SQL
+Select * from table(dbms_xplan.display_cursor(null,null,'allstats last'));
+关键字解读：
+1.starts：SQL执行的次数；
+2.E-Rows：执行计划预计返回的行数；
+3.R-Rows：执行计划实际返回的行数；
+4.A-Time：每一步执行的时间(HH:MM:SS.FF)，根据这一行可知SQL耗时在哪些地方；
+5.Buffers：每一步实际执行的逻辑读或一致性读；
+6.Reads：物理读；
+
+优点：1.可以清晰的从starts得出表被访问多少次；
+            2.可以从E-Rows和A-Rows得到预测的行数和真实的行数，从而可以准确判断Oracle评估是否准确；
+            3.虽然没有准确的输出运行时的相关统计信息，但是执行计划中的Buffers就是真实的逻辑读的数值；
+
+开启动态抽样并设置等级：
+Alter session set optimizer_dynamic_sampling=4;
+显示动态抽样等级：
+show parameter optimizer_dynamic_sampling
