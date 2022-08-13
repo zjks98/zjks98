@@ -4,6 +4,9 @@
 Alter session set statistics_level=all;
 SQL
 Select * from table(dbms_xplan.display_cursor(null,null,'allstats last'));
+select * from table(DBMS_XPLAN.DISPLAY_CURSOR(format=>'allstats last'));
+select * from table(dbms_xplan.display);
+SELECT * FROM table(DBMS_XPLAN.DISPLAY_CURSOR(FORMAT=>'ALLSTATS LAST ALL +OUTLINE'));
 关键字解读：
 1.starts：SQL执行的次数；
 2.E-Rows：执行计划预计返回的行数；
