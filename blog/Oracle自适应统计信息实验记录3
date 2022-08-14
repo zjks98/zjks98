@@ -1,0 +1,136 @@
+### oracle自适应统计信息实验记录3 2022/08/14
+
+select count(*) from company_name cn where cn.name like '%abc%'; (E-rows和A-rows相差很大：11750:8）
+
+Alter session set statistics_level=all;
+SQL
+Select * from table(dbms_xplan.display_cursor(null,null,'allstats last'));
+
+JOB：1c.sql
+SELECT MIN(mc.note) production_note,
+       MIN(t.title) movie_title,
+       MIN(t.production_year) movie_year
+FROM company_type ct,
+     info_type it,
+     movie_companies mc,
+     movie_info_idx mi_idx,
+     title t
+WHERE ct.kind = 'production companies'
+  AND it.info = 'top 250 rank'
+  AND mc.note NOT LIKE '%(as Metro-Goldwyn-Mayer Pictures)%'
+  AND (mc.note LIKE '%(co-production)%')
+  AND t.production_year >2010
+  AND ct.id = mc.company_type_id
+  AND t.id = mc.movie_id
+  AND t.id = mi_idx.movie_id
+  AND mc.movie_id = mi_idx.movie_id
+  AND it.id = mi_idx.info_type_id;
+  (This is an adaptive plan)
+  
+select TO_CHAR(d.directive_id) dir_id, o.owner, o.object_name, o.subobject_name, o.object_type, d.type, d.state, d.reason
+from dba_sql_plan_directives d, dba_sql_plan_dir_objects o
+where d.directive_id = o.directive_id
+and o.owner in ('SYSTEM')
+and object_name in ('MOVIE_COMPANIES')
+order by 1,2,3,4,5;
+
+SELECT SQL_ID, CHILD_NUMBER, SQL_TEXT, IS_REOPTIMIZABLE
+FROM   V$SQL
+WHERE SQL_ID = 'd6vmtfv0rnsj9';
+
+SELECT *
+FROM   V$SQL
+WHERE SQL_ID = 'd6vmtfv0rnsj9';
+
+JOB 3a.sql
+SELECT MIN(t.title) movie_title
+FROM keyword k,
+     movie_info mi,
+     movie_keyword mk,
+     title t
+WHERE k.keyword LIKE '%sequel%'
+  AND mi.info IN ('Sweden',
+                  'Norway',
+                  'Germany',
+                  'Denmark',
+                  'Swedish',
+                  'Denish',
+                  'Norwegian',
+                  'German')
+  AND t.production_year > 2005
+  AND t.id = mi.movie_id
+  AND t.id = mk.movie_id
+  AND mk.movie_id = mi.movie_id
+  AND k.id = mk.keyword_id;
+  (this is an adaptive plan)
+  
+  
+JOB 4b.sql
+SELECT MIN(mi_idx.info) rating,
+       MIN(t.title) movie_title
+FROM info_type it,
+     keyword k,
+     movie_info_idx mi_idx,
+     movie_keyword mk,
+     title t
+WHERE it.info ='rating'
+  AND k.keyword LIKE '%sequel%'
+  AND mi_idx.info > '9.0'
+  AND t.production_year > 2010
+  AND t.id = mi_idx.movie_id
+  AND t.id = mk.movie_id
+  AND mk.movie_id = mi_idx.movie_id
+  AND k.id = mk.keyword_id
+  AND it.id = mi_idx.info_type_id;
+未标注是一个自适应计划，但其中基数估计也有差距较大的地方。
+
+SELECT count(*) from keyword k where k.keyword like '%sequel%';
+基数差距较大：6709:30
+SELECT /*+ dynamic_sampling(5) */ count(*) from keyword k where k.keyword like '%sequel%';
+动态等级为1,2时，基数估计不变；且没有动态抽样的Note
+动态等级为3,4时，基数编号，此时为：33:30。有动态抽样的Note
+
+JOB 6a.sql
+SELECT MIN(k.keyword) movie_keyword,
+       MIN(n.name) actor_name,
+       MIN(t.title) marvel_movie
+FROM cast_info ci,
+     keyword k,
+     movie_keyword mk,
+     name n,
+     title t
+WHERE k.keyword = 'marvel-cinematic-universe'
+  AND n.name LIKE '%Downey%Robert%'
+  AND t.production_year > 2010
+  AND k.id = mk.keyword_id
+  AND t.id = mk.movie_id
+  AND t.id = ci.movie_id
+  AND ci.movie_id = mk.movie_id
+  AND n.id = ci.person_id;
+
+JOB 6b.sql
+SELECT MIN(k.keyword) movie_keyword,
+       MIN(n.name) actor_name,
+       MIN(t.title) hero_movie
+FROM cast_info ci,
+     keyword k,
+     movie_keyword mk,
+     name n,
+     title t
+WHERE k.keyword IN ('superhero',
+                    'sequel',
+                    'second-part',
+                    'marvel-comics',
+                    'based-on-comic',
+                    'tv-special',
+                    'fight',
+                    'violence')
+  AND n.name LIKE '%Downey%Robert%'
+  AND t.production_year > 2014
+  AND k.id = mk.keyword_id
+  AND t.id = mk.movie_id
+  AND t.id = ci.movie_id
+  AND ci.movie_id = mk.movie_id
+  AND n.id = ci.person_id;
+
+  
