@@ -1,0 +1,44 @@
+## oracle自适应统计信息实验记录3 2022/09/05 ##
+
+Alter session set statistics_level=all;
+SQL语句
+Select * from table(dbms_xplan.display_cursor(null,null,'allstats last'));
+
+### 主题：将动态采样应用在JOB的部分语句上，查看其运行效果 ###
+
+JOB：1c.sql
+
+SELECT MIN(mc.note) production_note,
+       MIN(t.title) movie_title,
+       MIN(t.production_year) movie_year
+FROM company_type ct,
+     info_type it,
+     movie_companies mc,
+     movie_info_idx mi_idx,
+     title t
+WHERE ct.kind = 'production companies'
+  AND it.info = 'top 250 rank'
+  AND mc.note NOT LIKE '%(as Metro-Goldwyn-Mayer Pictures)%'
+  AND (mc.note LIKE '%(co-production)%')
+  AND t.production_year >2010
+  AND ct.id = mc.company_type_id
+  AND t.id = mc.movie_id
+  AND t.id = mi_idx.movie_id
+  AND mc.movie_id = mi_idx.movie_id
+  AND it.id = mi_idx.info_type_id;
+
+- this is an adaptive plan
+
+根据观察执行计划：首先这是一个自适应的计划，其次 4 5 两行hashjoin的估计行数和真实行数偏差较大，此处可能使用了adaptive join；
+
+思路：将自适应计划默认开启关闭 ？
+查看自适应计划的开启状态：
+show parameter optimizer_adaptive_plans;
+更改：
+Alter session set optimizer_adaptive_plans=FALSE;
+
+再运行1c.sql
+
+
+
+
