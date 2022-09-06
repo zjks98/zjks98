@@ -40,9 +40,14 @@ Alter session set optimizer_adaptive_plans=FALSE;
 再运行1c.sql
 没有观察到相关的变化
 
+-----------------------------------------------------------------------------------------------------------------------
+## 主题：对JOB所有SQL语句运行不同等级的动态采样查看基数情况：
 
+运行动态采样的hint：select /*+ dynamic_sampling(3) */ 
+/*+ dynamic_sampling(0) */   /*+ dynamic_sampling(1) */  /*+ dynamic_sampling(2) */  /*+ dynamic_sampling(3) */
+ /*+ dynamic_sampling(4) */ /*+ dynamic_sampling(5) */  /*+ dynamic_sampling(6) */  /*+ dynamic_sampling(7) */
+ /*+ dynamic_sampling(8) */  /*+ dynamic_sampling(9) */  /*+ dynamic_sampling(10) */  /*+ dynamic_sampling(11) */
 
-
-
+Select * from table(dbms_xplan.display_cursor(null,null,'allstats last'));
 
 
