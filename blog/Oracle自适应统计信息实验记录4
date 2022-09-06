@@ -38,6 +38,10 @@ show parameter optimizer_adaptive_plans;
 Alter session set optimizer_adaptive_plans=FALSE;
 
 再运行1c.sql
+没有观察到相关的变化
+
+
+
 
 
 
