@@ -3,7 +3,7 @@
 Alter session set statistics_level=all;
 SQL语句
 Select * from table(dbms_xplan.display_cursor(null,null,'allstats last'));
-
+// 用上面这个 ^|^
 SELECT *FROM table(DBMS_XPLAN.DISPLAY_CURSOR(FORMAT=>'ALLSTATS LAST ALL +OUTLINE'));
 ### 主题：将动态采样应用在JOB的部分语句上，查看其运行效果 ###
 
